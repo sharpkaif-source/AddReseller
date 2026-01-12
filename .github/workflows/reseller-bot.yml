@@ -100,26 +100,34 @@ jobs:
         if: success()
         run: |
           echo "🔍 Debugging email configuration..."
-          echo "Checking if secret is accessible..."
-          if [ -z "$SMTP_PASSWORD" ]; then
-            echo "❌ ERROR: SMTP_PASSWORD secret is EMPTY or NOT SET!"
-            echo "   This might be why authentication is failing!"
+          echo "Checking secret access methods..."
+          
+          # Method 1: Direct secret access (what we use in email step)
+          if [ -z "${{ secrets.SMTP_PASSWORD }}" ]; then
+            echo "❌ Method 1: Direct secret access is EMPTY"
           else
-            echo "✅ SMTP_PASSWORD secret exists and is accessible"
-            PASSWORD_LEN=${#SMTP_PASSWORD}
-            echo "   Length: $PASSWORD_LEN characters"
-            if [ $PASSWORD_LEN -lt 10 ]; then
-              echo "   ⚠️  WARNING: Password seems too short!"
-            fi
-            echo "   First 2 chars: ${SMTP_PASSWORD:0:2}..."
-            echo "   Last 2 chars: ...${SMTP_PASSWORD: -2}"
+            echo "✅ Method 1: Direct secret access works"
+            SECRET_LEN=${#{{ secrets.SMTP_PASSWORD }}}
+            echo "   Length: $SECRET_LEN characters"
           fi
+          
+          # Method 2: Environment variable
+          if [ -z "$SMTP_PASSWORD" ]; then
+            echo "❌ Method 2: Environment variable is EMPTY"
+          else
+            echo "✅ Method 2: Environment variable works"
+            ENV_LEN=${#SMTP_PASSWORD}
+            echo "   Length: $ENV_LEN characters"
+          fi
+          
           echo ""
           echo "Configuration:"
           echo "   Username: mohd.kashif@singleinterface.com"
           echo "   Server: smtp.gmail.com:587"
           echo "   Job status: ${{ job.status }}"
           echo "   Bot step outcome: ${{ steps.run-bot.outcome }}"
+          echo ""
+          echo "⚠️  Note: Secrets are masked in logs, but we can check if they exist"
         env:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           
