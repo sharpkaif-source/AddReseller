@@ -1,0 +1,83 @@
+name: Create Reseller Bot
+
+on:
+  # Manual trigger from GitHub UI
+  workflow_dispatch:
+    inputs:
+      reseller_name:
+        description: 'Custom reseller name (optional)'
+        required: false
+        type: string
+  # Trigger via repository_dispatch (for API/webhook)
+  repository_dispatch:
+    types: [create-reseller]
+  # Optional: Schedule (uncomment to enable)
+  # schedule:
+  #   - cron: '0 0 * * *'  # Daily at midnight UTC
+
+jobs:
+  create-reseller:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10  # Safety timeout (bot takes ~1 minute)
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+
+      - name: Setup environment variables
+        run: |
+          echo "BASE_URL=${{ secrets.BASE_URL || 'https://test-reseller.singleinterface.com/admin' }}" >> $GITHUB_ENV
+          echo "ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL || 'admin@reseller.com' }}" >> $GITHUB_ENV
+          echo "ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD || 'Admin@2025' }}" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Copy logo file (if exists)
+        run: |
+          if [ -f "Logo.png" ]; then
+            cp Logo.png logo.png
+          elif [ -f "logo.png" ]; then
+            echo "Logo file already exists"
+          else
+            echo "Warning: Logo file not found. Branding form may fail."
+          fi
+
+      - name: Run reseller creation bot
+        run: npm test
+        continue-on-error: false
+
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: error-screenshots
+          path: |
+            *.png
+            error-screenshot.png
+          retention-days: 7
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Reseller Creation Bot Results" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ **Status:** Success" >> $GITHUB_STEP_SUMMARY
+            echo "✅ Reseller created successfully!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Status:** Failed" >> $GITHUB_STEP_SUMMARY
+            echo "❌ Reseller creation failed. Check logs and screenshots." >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Execution Time:** ~52-53 seconds" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/reseller-bot.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/reseller-bot",
+      "dest": "/api/reseller-bot.js"
+    }
+  ],
+  "env": {
+    "PLAYWRIGHT_BROWSERS_PATH": "0"
+  }
+}
