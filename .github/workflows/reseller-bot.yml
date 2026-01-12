@@ -82,3 +82,58 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Execution Time:** ~52-53 seconds" >> $GITHUB_STEP_SUMMARY
           echo "**Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Send Success Email
+        if: success()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: ${{ secrets.SMTP_PORT || 587 }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: ✅ Reseller Bot: Success - Reseller Created
+          to: ${{ secrets.NOTIFICATION_EMAIL }}
+          from: ${{ secrets.SMTP_FROM || secrets.SMTP_USERNAME }}
+          body: |
+            <h2>✅ Reseller Creation Bot - Success</h2>
+            <p><strong>Status:</strong> Reseller created successfully!</p>
+            <p><strong>Workflow Run:</strong> <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">View Run #${{ github.run_number }}</a></p>
+            <p><strong>Repository:</strong> ${{ github.repository }}</p>
+            <p><strong>Branch:</strong> ${{ github.ref_name }}</p>
+            <p><strong>Triggered by:</strong> ${{ github.event_name }}</p>
+            <p><strong>Execution Time:</strong> ~52-53 seconds</p>
+            <p><strong>Commit:</strong> ${{ github.sha }}</p>
+            <hr>
+            <p><small>This is an automated notification from GitHub Actions.</small></p>
+          content_type: text/html
+
+      - name: Send Failure Email
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: ${{ secrets.SMTP_PORT || 587 }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: ❌ Reseller Bot: Failed - Reseller Creation Error
+          to: ${{ secrets.NOTIFICATION_EMAIL }}
+          from: ${{ secrets.SMTP_FROM || secrets.SMTP_USERNAME }}
+          body: |
+            <h2>❌ Reseller Creation Bot - Failed</h2>
+            <p><strong>Status:</strong> Reseller creation failed!</p>
+            <p><strong>Workflow Run:</strong> <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">View Run #${{ github.run_number }}</a></p>
+            <p><strong>Repository:</strong> ${{ github.repository }}</p>
+            <p><strong>Branch:</strong> ${{ github.ref_name }}</p>
+            <p><strong>Triggered by:</strong> ${{ github.event_name }}</p>
+            <p><strong>Commit:</strong> ${{ github.sha }}</p>
+            <hr>
+            <p><strong>Next Steps:</strong></p>
+            <ul>
+              <li>Check the workflow logs for error details</li>
+              <li>Download error screenshots from artifacts (if available)</li>
+              <li>Verify the application is accessible</li>
+              <li>Check credentials and configuration</li>
+            </ul>
+            <hr>
+            <p><small>This is an automated notification from GitHub Actions.</small></p>
+          content_type: text/html
