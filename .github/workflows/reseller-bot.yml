@@ -94,7 +94,7 @@ jobs:
         with:
           server_address: smtp.gmail.com
           server_port: 587
-          username: ${{ secrets.SMTP_USERNAME }}
+          username: mohd.kashif@singleinterface.com
           password: ${{ secrets.SMTP_PASSWORD }}
           subject: '✅ Reseller Bot: Success - Reseller Created'
           to: mohd.kashif@singleinterface.com
@@ -118,7 +118,7 @@ jobs:
         with:
           server_address: smtp.gmail.com
           server_port: 587
-          username: ${{ secrets.SMTP_USERNAME }}
+          username: mohd.kashif@singleinterface.com
           password: ${{ secrets.SMTP_PASSWORD }}
           subject: '❌ Reseller Bot: Failed - Reseller Creation Error'
           to: mohd.kashif@singleinterface.com
