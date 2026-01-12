@@ -11,9 +11,9 @@ on:
   # Trigger via repository_dispatch (for API/webhook)
   repository_dispatch:
     types: [create-reseller]
-  # Optional: Schedule (uncomment to enable)
-  # schedule:
-  #   - cron: '0 0 * * *'  # Daily at midnight UTC
+  # Schedule: Run every day at 9:00 AM UTC
+  schedule:
+    - cron: '0 9 * * *'  # Daily at 9:00 AM UTC
 
 jobs:
   create-reseller:
