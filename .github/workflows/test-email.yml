@@ -1,0 +1,30 @@
+name: Test Email Only
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-email:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+      - name: Test Email Sending
+        continue-on-error: true
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: mohd.kashif@singleinterface.com
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: '🧪 Test Email from GitHub Actions'
+          to: mohd.kashif@singleinterface.com
+          from: mohd.kashif@singleinterface.com
+          html_body: |
+            <h2>✅ Email Test Successful!</h2>
+            <p>This is a test email to verify SMTP configuration is working.</p>
+            <p><strong>Time:</strong> ${{ github.run_id }}</p>
+            <p><strong>Workflow:</strong> Test Email Only</p>
+            <p>If you received this email, the email notifications are working correctly!</p>
+            <hr>
+            <p><small>This is a test from GitHub Actions.</small></p>
