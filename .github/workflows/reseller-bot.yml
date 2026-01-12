@@ -59,6 +59,15 @@ jobs:
         id: run-bot
         run: npm test || echo "::error::Bot execution failed with exit code $?"
         continue-on-error: false
+        
+      - name: Check bot result
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ Bot completed successfully - email will be sent"
+          else
+            echo "❌ Bot failed - failure email will be sent"
+          fi
 
       - name: Upload screenshots on failure
         if: failure()
@@ -88,7 +97,7 @@ jobs:
           echo "**Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
 
       - name: Send Success Email
-        if: success()
+        if: success() && steps.run-bot.outcome == 'success'
         continue-on-error: true
         uses: dawidd6/action-send-mail@v3
         with:
