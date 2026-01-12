@@ -96,6 +96,33 @@ jobs:
           echo "**Execution Time:** ~52-53 seconds" >> $GITHUB_STEP_SUMMARY
           echo "**Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
 
+      - name: Debug Email Configuration
+        if: success()
+        run: |
+          echo "🔍 Debugging email configuration..."
+          echo "Checking if secret is accessible..."
+          if [ -z "$SMTP_PASSWORD" ]; then
+            echo "❌ ERROR: SMTP_PASSWORD secret is EMPTY or NOT SET!"
+            echo "   This might be why authentication is failing!"
+          else
+            echo "✅ SMTP_PASSWORD secret exists and is accessible"
+            PASSWORD_LEN=${#SMTP_PASSWORD}
+            echo "   Length: $PASSWORD_LEN characters"
+            if [ $PASSWORD_LEN -lt 10 ]; then
+              echo "   ⚠️  WARNING: Password seems too short!"
+            fi
+            echo "   First 2 chars: ${SMTP_PASSWORD:0:2}..."
+            echo "   Last 2 chars: ...${SMTP_PASSWORD: -2}"
+          fi
+          echo ""
+          echo "Configuration:"
+          echo "   Username: mohd.kashif@singleinterface.com"
+          echo "   Server: smtp.gmail.com:587"
+          echo "   Job status: ${{ job.status }}"
+          echo "   Bot step outcome: ${{ steps.run-bot.outcome }}"
+        env:
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          
       - name: Send Success Email
         if: success()
         continue-on-error: true
