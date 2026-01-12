@@ -11,9 +11,10 @@ on:
   # Trigger via repository_dispatch (for API/webhook)
   repository_dispatch:
     types: [create-reseller]
-  # Schedule: Run every day at 4:15 PM IST (Delhi time) = 10:45 AM UTC
+  # Schedule: Run every day at 4:35 PM IST (Delhi time) = 11:05 AM UTC
+  # Note: Set to 4:35 PM IST for today's test, can change back to 4:15 PM IST later
   schedule:
-    - cron: '45 10 * * *'  # Daily at 4:15 PM IST (10:45 AM UTC)
+    - cron: '5 11 * * *'  # Daily at 4:35 PM IST (11:05 AM UTC) - TEST TIME
 
 jobs:
   create-reseller:
