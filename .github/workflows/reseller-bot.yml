@@ -8,6 +8,7 @@ on:
         description: 'Custom reseller name (optional)'
         required: false
         type: string
+  # Manual trigger enabled - Run workflow button should appear
   # Trigger via repository_dispatch (for API/webhook)
   repository_dispatch:
     types: [create-reseller]
