@@ -96,7 +96,7 @@ jobs:
           server_port: ${{ secrets.SMTP_PORT || 587 }}
           username: ${{ secrets.SMTP_USERNAME }}
           password: ${{ secrets.SMTP_PASSWORD }}
-          subject: ✅ Reseller Bot: Success - Reseller Created
+          subject: '✅ Reseller Bot: Success - Reseller Created'
           to: ${{ secrets.NOTIFICATION_EMAIL }}
           from: ${{ secrets.SMTP_FROM || secrets.SMTP_USERNAME }}
           body: |
@@ -121,7 +121,7 @@ jobs:
           server_port: ${{ secrets.SMTP_PORT || 587 }}
           username: ${{ secrets.SMTP_USERNAME }}
           password: ${{ secrets.SMTP_PASSWORD }}
-          subject: ❌ Reseller Bot: Failed - Reseller Creation Error
+          subject: '❌ Reseller Bot: Failed - Reseller Creation Error'
           to: ${{ secrets.NOTIFICATION_EMAIL }}
           from: ${{ secrets.SMTP_FROM || secrets.SMTP_USERNAME }}
           body: |
