@@ -97,7 +97,7 @@ jobs:
           echo "**Triggered by:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
 
       - name: Send Success Email
-        if: success() && steps.run-bot.outcome == 'success'
+        if: success()
         continue-on-error: true
         uses: dawidd6/action-send-mail@v3
         with:
