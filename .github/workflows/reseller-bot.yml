@@ -98,8 +98,8 @@ jobs:
           password: ${{ secrets.SMTP_PASSWORD }}
           subject: '✅ Reseller Bot: Success - Reseller Created'
           to: ${{ secrets.NOTIFICATION_EMAIL }}
-          from: ${{ secrets.SMTP_FROM || secrets.SMTP_USERNAME }}
-          body: |
+          from: ${{ secrets.SMTP_USERNAME }}
+          html_body: |
             <h2>✅ Reseller Creation Bot - Success</h2>
             <p><strong>Status:</strong> Reseller created successfully!</p>
             <p><strong>Workflow Run:</strong> <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">View Run #${{ github.run_number }}</a></p>
@@ -110,7 +110,6 @@ jobs:
             <p><strong>Commit:</strong> ${{ github.sha }}</p>
             <hr>
             <p><small>This is an automated notification from GitHub Actions.</small></p>
-          content_type: text/html
 
       - name: Send Failure Email
         if: failure()
@@ -123,8 +122,8 @@ jobs:
           password: ${{ secrets.SMTP_PASSWORD }}
           subject: '❌ Reseller Bot: Failed - Reseller Creation Error'
           to: ${{ secrets.NOTIFICATION_EMAIL }}
-          from: ${{ secrets.SMTP_FROM || secrets.SMTP_USERNAME }}
-          body: |
+          from: ${{ secrets.SMTP_USERNAME }}
+          html_body: |
             <h2>❌ Reseller Creation Bot - Failed</h2>
             <p><strong>Status:</strong> Reseller creation failed!</p>
             <p><strong>Workflow Run:</strong> <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">View Run #${{ github.run_number }}</a></p>
@@ -142,4 +141,3 @@ jobs:
             </ul>
             <hr>
             <p><small>This is an automated notification from GitHub Actions.</small></p>
-          content_type: text/html
