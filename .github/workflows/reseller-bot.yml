@@ -86,6 +86,7 @@ jobs:
 
       - name: Send Success Email
         if: success()
+        continue-on-error: true
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: ${{ secrets.SMTP_SERVER }}
@@ -110,6 +111,7 @@ jobs:
 
       - name: Send Failure Email
         if: failure()
+        continue-on-error: true
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: ${{ secrets.SMTP_SERVER }}
