@@ -90,6 +90,10 @@ jobs:
       - name: Send Success Email
         if: success()
         continue-on-error: true
+        run: |
+          echo "📧 Attempting to send success email..."
+          echo "   To: mohd.kashif@singleinterface.com"
+          echo "   Subject: ✅ Reseller Bot: Success - Reseller Created"
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
