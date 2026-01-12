@@ -134,12 +134,14 @@ jobs:
       - name: Send Success Email
         if: success()
         continue-on-error: true
+        env:
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
           server_port: 587
           username: mohd.kashif@singleinterface.com
-          password: ${{ secrets.SMTP_PASSWORD }}
+          password: ${{ env.SMTP_PASSWORD }}
           subject: '✅ Reseller Bot: Success - Reseller Created'
           to: mohd.kashif@singleinterface.com
           from: mohd.kashif@singleinterface.com
@@ -158,12 +160,14 @@ jobs:
       - name: Send Failure Email
         if: failure()
         continue-on-error: true
+        env:
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
           server_port: 587
           username: mohd.kashif@singleinterface.com
-          password: ${{ secrets.SMTP_PASSWORD }}
+          password: ${{ env.SMTP_PASSWORD }}
           subject: '❌ Reseller Bot: Failed - Reseller Creation Error'
           to: mohd.kashif@singleinterface.com
           from: mohd.kashif@singleinterface.com
