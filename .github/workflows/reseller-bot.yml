@@ -98,7 +98,7 @@ jobs:
           password: ${{ secrets.SMTP_PASSWORD }}
           subject: '✅ Reseller Bot: Success - Reseller Created'
           to: ${{ secrets.NOTIFICATION_EMAIL }}
-          from: ${{ secrets.SMTP_USERNAME || 'mohd.kashif@singleinterface.com' }}
+          from: mohd.kashif@singleinterface.com
           html_body: |
             <h2>✅ Reseller Creation Bot - Success</h2>
             <p><strong>Status:</strong> Reseller created successfully!</p>
@@ -122,7 +122,7 @@ jobs:
           password: ${{ secrets.SMTP_PASSWORD }}
           subject: '❌ Reseller Bot: Failed - Reseller Creation Error'
           to: ${{ secrets.NOTIFICATION_EMAIL }}
-          from: ${{ secrets.SMTP_USERNAME || 'mohd.kashif@singleinterface.com' }}
+          from: mohd.kashif@singleinterface.com
           html_body: |
             <h2>❌ Reseller Creation Bot - Failed</h2>
             <p><strong>Status:</strong> Reseller creation failed!</p>
