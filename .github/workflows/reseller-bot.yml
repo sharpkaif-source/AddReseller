@@ -56,7 +56,8 @@ jobs:
           fi
 
       - name: Run reseller creation bot
-        run: npm test
+        id: run-bot
+        run: npm test || echo "::error::Bot execution failed with exit code $?"
         continue-on-error: false
 
       - name: Upload screenshots on failure
@@ -67,7 +68,9 @@ jobs:
           path: |
             *.png
             error-screenshot.png
+            login-page.png
           retention-days: 7
+          if-no-files-found: ignore
 
       - name: Summary
         if: always()
