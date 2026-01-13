@@ -5,3 +5,5 @@ error-screenshot.png
 playwright-report/
 test-results/
 .DS_Store
+videos/
+*.webm
