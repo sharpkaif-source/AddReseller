@@ -2219,10 +2219,12 @@ async function submitReseller(page) {
         resellerFound = true;
       } else {
         // Search all rows (but first row should have it)
-        for (let i = 0; i < Math.min(rowCount, 10); i++) {
+        // Check more rows (up to 20) with strict matching
+        for (let i = 0; i < Math.min(rowCount, 20); i++) {
           const row = allRows.nth(i);
           const rowText = await row.textContent().catch(() => '');
-          if (rowText && (rowText.includes(resellerName) || rowText.toLowerCase().includes(resellerName.toLowerCase()))) {
+          // Strict matching - must contain the exact reseller name
+          if (rowText && rowText.includes(resellerName)) {
             console.log(`   ✓ Found reseller name "${resellerName}" in row ${i + 1}`);
             resellerFound = true;
             break;
@@ -2242,7 +2244,8 @@ async function submitReseller(page) {
         const firstRowTextRetry = await firstRowRetry.textContent().catch(() => '');
         console.log(`   🔍 First row text after retry: "${firstRowTextRetry}"`);
         
-        if (firstRowTextRetry && (firstRowTextRetry.includes(resellerName) || firstRowTextRetry.toLowerCase().includes(resellerName.toLowerCase()))) {
+        // Strict matching - must contain the exact reseller name
+        if (firstRowTextRetry && firstRowTextRetry.includes(resellerName)) {
           console.log(`   ✓ Found reseller name "${resellerName}" in first row after retry!`);
           resellerFound = true;
         }
@@ -2278,38 +2281,53 @@ async function submitReseller(page) {
       console.log(`   ⚠️  API response showed success, but reseller not visible in list yet.`);
       console.log(`   ⚠️  This might be a timing issue - waiting longer and checking again...`);
       
-      // Wait longer and check one more time
-      await page.waitForTimeout(3000); // Reduced from 5s
-      await page.reload({ waitUntil: 'networkidle', timeout: 30000 });
-      await page.waitForTimeout(2000); // Reduced from 3s
+      // Wait longer and check multiple times with increasing delays
+      console.log(`   ⏳ Waiting for reseller to appear in dashboard (this may take up to 15 seconds)...`);
       
-      // Check again
-      const retryRows = page.locator('tbody tr, table tbody tr, tr');
-      const retryRowCount = await retryRows.count();
       let retryFound = false;
+      const maxRetries = 5;
+      const retryDelays = [3000, 3000, 3000, 3000, 3000]; // 5 retries of 3 seconds each
       
-      if (retryRowCount > 0) {
-        for (let i = 0; i < Math.min(retryRowCount, 10); i++) {
-          const row = retryRows.nth(i);
-          const rowText = await row.textContent().catch(() => '');
-          if (rowText && (rowText.includes(resellerName) || rowText.toLowerCase().includes(resellerName.toLowerCase()))) {
-            console.log(`   ✅ SUCCESS: Reseller "${resellerName}" found in dashboard list after retry (row ${i + 1})!`);
-            retryFound = true;
-            break;
+      for (let retryAttempt = 0; retryAttempt < maxRetries; retryAttempt++) {
+        console.log(`   🔄 Retry attempt ${retryAttempt + 1}/${maxRetries}...`);
+        await page.waitForTimeout(retryDelays[retryAttempt]);
+        await page.reload({ waitUntil: 'networkidle', timeout: 30000 });
+        await page.waitForTimeout(2000);
+        
+        // Check again with more thorough search
+        const retryRows = page.locator('tbody tr, table tbody tr, tr');
+        const retryRowCount = await retryRows.count();
+        console.log(`   🔍 Found ${retryRowCount} rows in table (retry ${retryAttempt + 1})`);
+        
+        if (retryRowCount > 0) {
+          // Check first 20 rows (in case there are many resellers)
+          for (let i = 0; i < Math.min(retryRowCount, 20); i++) {
+            const row = retryRows.nth(i);
+            const rowText = await row.textContent().catch(() => '');
+            // More strict matching - must contain the exact reseller name
+            if (rowText && rowText.includes(resellerName)) {
+              console.log(`   ✅ SUCCESS: Reseller "${resellerName}" found in dashboard list after retry ${retryAttempt + 1} (row ${i + 1})!`);
+              retryFound = true;
+              break;
+            }
           }
+        }
+        
+        if (retryFound) {
+          break;
         }
       }
       
       if (retryFound) {
         return true;
       } else {
-        console.log(`   ❌ FAILED: Reseller "${resellerName}" still NOT found in dashboard list after retry!`);
-        console.log('   ⚠️  Reseller may not have been created successfully');
-        return false;
+        console.log(`   ❌ FAILED: Reseller "${resellerName}" still NOT found in dashboard list after ${maxRetries} retries!`);
+        console.log('   ⚠️  Reseller was NOT created successfully - throwing error');
+        throw new Error(`CRITICAL: Reseller "${resellerName}" was not found in dashboard after creation. The reseller may not have been created successfully.`);
       }
     } else {
-      console.log('   ⚠️  Reseller may not have been created successfully');
-      return false;
+      console.log('   ❌ FAILED: Reseller was NOT created successfully - throwing error');
+      throw new Error(`CRITICAL: Reseller "${resellerName}" was not found in dashboard after creation. The reseller may not have been created successfully.`);
     }
   }
 }
