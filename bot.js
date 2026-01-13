@@ -1269,95 +1269,6 @@ async function fillDomainForm(page) {
   await page.waitForSelector('div.fixed.inset-0.z-0', { state: 'hidden', timeout: 5000 }).catch(() => {});
   await page.waitForTimeout(250);
   
-  console.log(`   📝 Filling Business Name: ${config.resellerData.businessName}`);
-  
-  // SIMPLIFIED: Use CSS selector to find business name field
-  // Look for input with placeholder containing "Awesome Brand" or similar
-  let businessNameFilled = false;
-  // Define XPath at function scope for verification later
-  const businessNameXpath = '/html/body/div/div/div/div[2]/form/div[2]/div/input';
-  
-  try {
-    // Wait for overlay to disappear first
-    await page.waitForSelector('div.fixed.inset-0.z-0', { state: 'hidden', timeout: 10000 }).catch(() => {});
-    await page.waitForTimeout(250);
-    
-    // Try exact placeholder first
-    const businessNameInput = page.locator('input[placeholder*="Awesome Brand" i], input[placeholder*="Business Name" i]').first();
-    await businessNameInput.waitFor({ state: 'visible', timeout: 10000 });
-    console.log('   ✓ Business Name field found');
-    
-    // Scroll into view
-    await businessNameInput.scrollIntoViewIfNeeded();
-    await page.waitForTimeout(250);
-    
-    // Wait for overlay to disappear before clicking
-    await page.waitForSelector('div.fixed.inset-0.z-0', { state: 'hidden', timeout: 10000 }).catch(() => {});
-    await page.waitForTimeout(250);
-    
-    // Fill using Playwright's fill method - use JavaScript click to bypass overlay
-    try {
-      await businessNameInput.click({ timeout: 5000 });
-    } catch (e) {
-      // If click is blocked by overlay, use JavaScript click
-      await businessNameInput.evaluate((el) => el.click());
-    }
-    await page.waitForTimeout(150);
-    await businessNameInput.fill(config.resellerData.businessName);
-    await page.waitForTimeout(250);
-    
-    // Verify
-    const verifyValue = await businessNameInput.inputValue();
-    if (verifyValue === config.resellerData.businessName) {
-      console.log(`   ✅ Business Name filled successfully: "${verifyValue}"`);
-      businessNameFilled = true;
-    } else {
-      console.log(`   ⚠️  First attempt failed. Expected: "${config.resellerData.businessName}", Got: "${verifyValue}"`);
-      // Try again with JavaScript
-      await businessNameInput.evaluate((el, name) => {
-        el.focus();
-        el.value = '';
-        el.value = name;
-        el.dispatchEvent(new Event('input', { bubbles: true }));
-        el.dispatchEvent(new Event('change', { bubbles: true }));
-      }, config.resellerData.businessName);
-      await page.waitForTimeout(250);
-      const verifyValue2 = await businessNameInput.inputValue();
-      if (verifyValue2 === config.resellerData.businessName) {
-        console.log(`   ✅ Business Name filled successfully on retry: "${verifyValue2}"`);
-        businessNameFilled = true;
-      }
-    }
-  } catch (e) {
-    console.log(`   ⚠️  Business Name field not found with CSS selector: ${e.message}`);
-    // Fallback: Try XPath
-    try {
-      const businessNameInput2 = page.locator(`xpath=${businessNameXpath}`).first();
-      await businessNameInput2.waitFor({ state: 'visible', timeout: 5000 });
-      await businessNameInput2.scrollIntoViewIfNeeded();
-      await page.waitForTimeout(250);
-      await businessNameInput2.fill(config.resellerData.businessName);
-      await page.waitForTimeout(250);
-      const verifyValue = await businessNameInput2.inputValue();
-      if (verifyValue === config.resellerData.businessName) {
-        console.log(`   ✅ Business Name filled using XPath: "${verifyValue}"`);
-        businessNameFilled = true;
-      }
-    } catch (e2) {
-      console.log(`   ⚠️  XPath fallback also failed: ${e2.message}`);
-    }
-  }
-
-  // CRITICAL: Verify business name is filled BEFORE proceeding
-  if (!businessNameFilled) {
-    await page.screenshot({ path: 'business-name-not-filled.png', fullPage: true, timeout: 5000 }).catch(() => {});
-    console.log(`   ❌ CRITICAL: Business Name not filled! Expected: "${config.resellerData.businessName}"`);
-    console.log(`   ❌ STOPPING: Cannot proceed to next step without filling Business Name (mandatory field)!`);
-    throw new Error(`CRITICAL: Business Name field could not be filled. Expected: "${config.resellerData.businessName}". Bot stopped to prevent invalid submission.`);
-  }
-  
-  console.log(`   ✅ Business Name verified: "${config.resellerData.businessName}" - Proceeding...`);
-
   // Brand Domain
   console.log(`   📝 Filling Brand Domain: ${config.resellerData.brandDomain}`);
   const brandDomainInput = page.locator('input[placeholder*="mybrand.com" i], input[placeholder*="Brand Domain" i]').first();
@@ -1417,18 +1328,6 @@ async function fillDomainForm(page) {
   // CRITICAL: Verify ALL Domain form fields are filled before proceeding
   console.log('   🔍 Verifying all Domain form fields are filled...');
   
-  // Verify Business Name
-  const businessNameValue = await page.evaluate((xpath) => {
-    const el = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-    return el ? el.value : '';
-  }, businessNameXpath);
-  
-  if (businessNameValue !== config.resellerData.businessName) {
-    await page.screenshot({ path: 'domain-form-business-name-not-filled.png', fullPage: true }).catch(() => {});
-    throw new Error(`CRITICAL: Business Name not filled! Expected: "${config.resellerData.businessName}", Got: "${businessNameValue}". Cannot proceed to next step.`);
-  }
-  console.log(`   ✓ Business Name verified: "${businessNameValue}"`);
-  
   // Verify Brand Domain
   const brandDomainValue = await brandDomainInput.inputValue();
   if (brandDomainValue !== config.resellerData.brandDomain) {
@@ -1461,29 +1360,7 @@ async function fillDomainForm(page) {
   });
   await page.waitForTimeout(250);
   
-  // CRITICAL: Verify business name is filled BEFORE clicking Next Step
-  let finalBusinessNameCheck = '';
-  try {
-    const businessNameInputCheck = page.locator('input[placeholder*="Awesome Brand" i], input[placeholder*="Business Name" i]').first();
-    if (await businessNameInputCheck.count() > 0) {
-      finalBusinessNameCheck = await businessNameInputCheck.inputValue();
-    }
-  } catch (e) {
-    console.log(`   ⚠️  Could not verify business name: ${e.message}`);
-  }
-  
-  console.log(`   🔍 Final business name check - Expected: "${config.resellerData.businessName}", Got: "${finalBusinessNameCheck}"`);
-  
-  if (finalBusinessNameCheck !== config.resellerData.businessName) {
-    await page.screenshot({ path: 'business-name-not-filled-before-next.png', fullPage: true, timeout: 5000 }).catch(() => {});
-    console.log(`   ❌ CRITICAL: Business Name not filled! Expected: "${config.resellerData.businessName}", Got: "${finalBusinessNameCheck}"`);
-    console.log(`   ❌ STOPPING: Cannot proceed to Branding form without filling Business Name (mandatory field)!`);
-    throw new Error(`CRITICAL: Business Name not filled before clicking Next Step! Expected: "${config.resellerData.businessName}", Got: "${finalBusinessNameCheck}". Bot stopped to prevent invalid submission.`);
-  }
-  
-  console.log(`   ✅ Business Name verified: "${finalBusinessNameCheck}" - Proceeding to next step...`);
-  
-  // Click Next Step button - but ONLY if business name is filled
+  // Click Next Step button
   await page.waitForSelector('div.fixed.inset-0.z-0', { state: 'hidden', timeout: 5000 }).catch(() => {
     console.log('   ℹ️  No overlay found or already gone');
   });
