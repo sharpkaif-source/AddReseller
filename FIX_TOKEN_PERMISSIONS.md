@@ -20,7 +20,7 @@ The token needs **"repo"** scope to add secrets. Here's how to fix it:
 ## Step 2: Revoke Old Token (Security)
 
 1. Go to: https://github.com/settings/tokens
-2. Find the old token (it starts with `ghp_`)
+2. Find the old token (GitHub tokens start with specific prefixes)
 3. Click "Revoke" to delete it (for security)
 
 ## Step 3: Run Script Again with New Token
