@@ -131,23 +131,22 @@ jobs:
         env:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           
-      - name: Send Success Email via Office API
+      - name: Send Success Email via SendGrid
         if: success()
         continue-on-error: true
         run: |
-          echo "📧 Sending success email via Office API..."
+          echo "📧 Sending success email via SendGrid..."
           
-          API_URL="${{ secrets.OFFICE_API_URL }}"
-          API_KEY="${{ secrets.OFFICE_API_KEY }}"
+          API_KEY="${{ secrets.SENDGRID_API_KEY }}"
           
-          if [ -z "$API_URL" ]; then
-            echo "❌ ERROR: OFFICE_API_URL secret is not set!"
+          if [ -z "$API_KEY" ]; then
+            echo "❌ ERROR: SENDGRID_API_KEY secret is not set!"
             exit 1
           fi
           
           # Prepare email content
           SUBJECT="✅ Reseller Bot: Success - Reseller Created"
-          BODY="<h2>✅ Reseller Creation Bot - Success</h2>
+          HTML_BODY="<h2>✅ Reseller Creation Bot - Success</h2>
           <p><strong>Status:</strong> Reseller created successfully!</p>
           <p><strong>Workflow Run:</strong> <a href=\"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\">View Run #${{ github.run_number }}</a></p>
           <p><strong>Repository:</strong> ${{ github.repository }}</p>
@@ -160,19 +159,46 @@ jobs:
           
           TO="mohd.kashif@singleinterface.com"
           
-          # Create JSON payload (adjust format based on your Office API requirements)
+          # Create SendGrid JSON payload
           JSON_PAYLOAD=$(jq -n \
             --arg to "$TO" \
             --arg subject "$SUBJECT" \
-            --arg body "$BODY" \
-            '{to: $to, subject: $subject, body: $body}')
+            --arg body "$HTML_BODY" \
+            '{
+              "personalizations": [
+                {
+                  "to": [{"email": $to}]
+                }
+              ],
+              "from": {
+                "email": "mohd.kashif@singleinterface.com",
+                "name": "SingleInterface"
+              },
+              "reply_to": {
+                "email": "mohd.kashif@singleinterface.com",
+                "name": "SingleInterface"
+              },
+              "subject": $subject,
+              "content": [
+                {
+                  "type": "text/html",
+                  "value": $body
+                }
+              ],
+              "tracking_settings": {
+                "click_tracking": {"enable": true, "enable_text": false},
+                "open_tracking": {"enable": true, "substitution_tag": "%open-track%"},
+                "subscription_tracking": {"enable": true}
+              },
+              "categories": ["reseller_bot", "success"]
+            }')
           
-          # Send HTTP request (adjust headers based on your API)
-          echo "🌐 Calling Office API: $API_URL"
+          # Send HTTP request to SendGrid
+          echo "🌐 Calling SendGrid API..."
           
-          HTTP_CODE=$(curl -X POST "$API_URL" \
-            -H "Content-Type: application/json" \
+          HTTP_CODE=$(curl -X POST "https://api.sendgrid.com/v3/mail/send" \
             -H "Authorization: Bearer $API_KEY" \
+            -H "Content-Type: application/json" \
             -d "$JSON_PAYLOAD" \
             -w "%{http_code}" \
             -o /tmp/api-response.txt \
@@ -187,23 +213,22 @@ jobs:
             exit 1
           fi
 
-      - name: Send Failure Email via Office API
+      - name: Send Failure Email via SendGrid
         if: failure()
         continue-on-error: true
         run: |
-          echo "📧 Sending failure email via Office API..."
+          echo "📧 Sending failure email via SendGrid..."
           
-          API_URL="${{ secrets.OFFICE_API_URL }}"
-          API_KEY="${{ secrets.OFFICE_API_KEY }}"
+          API_KEY="${{ secrets.SENDGRID_API_KEY }}"
           
-          if [ -z "$API_URL" ]; then
-            echo "❌ ERROR: OFFICE_API_URL secret is not set!"
+          if [ -z "$API_KEY" ]; then
+            echo "❌ ERROR: SENDGRID_API_KEY secret is not set!"
             exit 1
           fi
           
           # Prepare email content
           SUBJECT="❌ Reseller Bot: Failed - Reseller Creation Error"
-          BODY="<h2>❌ Reseller Creation Bot - Failed</h2>
+          HTML_BODY="<h2>❌ Reseller Creation Bot - Failed</h2>
           <p><strong>Status:</strong> Reseller creation failed!</p>
           <p><strong>Workflow Run:</strong> <a href=\"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\">View Run #${{ github.run_number }}</a></p>
           <p><strong>Repository:</strong> ${{ github.repository }}</p>
@@ -223,19 +248,46 @@ jobs:
           
           TO="mohd.kashif@singleinterface.com"
           
-          # Create JSON payload (adjust format based on your Office API requirements)
+          # Create SendGrid JSON payload
           JSON_PAYLOAD=$(jq -n \
             --arg to "$TO" \
             --arg subject "$SUBJECT" \
-            --arg body "$BODY" \
-            '{to: $to, subject: $subject, body: $body}')
+            --arg body "$HTML_BODY" \
+            '{
+              "personalizations": [
+                {
+                  "to": [{"email": $to}]
+                }
+              ],
+              "from": {
+                "email": "mohd.kashif@singleinterface.com",
+                "name": "SingleInterface"
+              },
+              "reply_to": {
+                "email": "mohd.kashif@singleinterface.com",
+                "name": "SingleInterface"
+              },
+              "subject": $subject,
+              "content": [
+                {
+                  "type": "text/html",
+                  "value": $body
+                }
+              ],
+              "tracking_settings": {
+                "click_tracking": {"enable": true, "enable_text": false},
+                "open_tracking": {"enable": true, "substitution_tag": "%open-track%"},
+                "subscription_tracking": {"enable": true}
+              },
+              "categories": ["reseller_bot", "failure"]
+            }')
           
-          # Send HTTP request (adjust headers based on your API)
-          echo "🌐 Calling Office API: $API_URL"
+          # Send HTTP request to SendGrid
+          echo "🌐 Calling SendGrid API..."
           
-          HTTP_CODE=$(curl -X POST "$API_URL" \
-            -H "Content-Type: application/json" \
+          HTTP_CODE=$(curl -X POST "https://api.sendgrid.com/v3/mail/send" \
             -H "Authorization: Bearer $API_KEY" \
+            -H "Content-Type: application/json" \
             -d "$JSON_PAYLOAD" \
             -w "%{http_code}" \
             -o /tmp/api-response.txt \

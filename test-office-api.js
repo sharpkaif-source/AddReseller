@@ -1,70 +1,93 @@
 /**
- * Test Office API email endpoint
+ * Test SendGrid email API
  * Usage: node test-office-api.js
  * 
- * Set environment variables:
- *   OFFICE_API_URL=https://your-api-endpoint.com/send-email
- *   OFFICE_API_KEY=your-api-key
+ * Set environment variable:
+ *   SENDGRID_API_KEY=your-sendgrid-api-key
  */
 
 const https = require('https');
-const http = require('http');
 
-// Configuration - Update these with your Office API details
-const API_CONFIG = {
-  url: process.env.OFFICE_API_URL || 'https://your-api-endpoint.com/send-email',
-  method: 'POST', // Change to 'GET' if needed
-  headers: {
-    'Content-Type': 'application/json',
-    // Add your API key header here - adjust based on your API requirements
-    'Authorization': `Bearer ${process.env.OFFICE_API_KEY || 'your-api-key'}`,
-    // Alternative: 'X-API-Key': process.env.OFFICE_API_KEY,
-    // Alternative: 'API-Key': process.env.OFFICE_API_KEY,
-  }
-};
+// Configuration - SendGrid API
+const API_KEY = process.env.SENDGRID_API_KEY;
 
-// Email data
+if (!API_KEY) {
+  console.error('❌ Error: SENDGRID_API_KEY environment variable is required');
+  console.error('   Set it with: export SENDGRID_API_KEY=your-api-key');
+  process.exit(1);
+}
+
+// Email data - SendGrid format
 const emailData = {
-  to: 'mohd.kashif@singleinterface.com',
-  subject: '🧪 Test Email from Office API',
-  body: `
-    <h2>✅ Office API Test Successful!</h2>
-    <p>This is a test email sent via Office API.</p>
-    <p><strong>Time:</strong> ${new Date().toISOString()}</p>
-    <p>If you received this email, the Office API is working correctly!</p>
-  `,
-  // Add any other fields your API requires
+  personalizations: [
+    {
+      to: [
+        { email: 'mohd.kashif@singleinterface.com' }
+      ]
+    }
+  ],
+  from: {
+    email: 'mohd.kashif@singleinterface.com',
+    name: 'SingleInterface'
+  },
+  reply_to: {
+    email: 'mohd.kashif@singleinterface.com',
+    name: 'SingleInterface'
+  },
+  subject: '🧪 Test Email from SendGrid',
+  content: [
+    {
+      type: 'text/html',
+      value: `
+        <h2>✅ SendGrid Test Successful!</h2>
+        <p>This is a test email sent via SendGrid API.</p>
+        <p><strong>Time:</strong> ${new Date().toISOString()}</p>
+        <p>If you received this email, SendGrid is working correctly!</p>
+      `
+    }
+  ],
+  tracking_settings: {
+    click_tracking: {
+      enable: true,
+      enable_text: false
+    },
+    open_tracking: {
+      enable: true,
+      substitution_tag: '%open-track%'
+    },
+    subscription_tracking: {
+      enable: true
+    }
+  },
+  categories: ['reseller_bot', 'test']
 };
 
-console.log('🧪 Testing Office API Email...\n');
+console.log('🧪 Testing SendGrid Email...\n');
 console.log('📧 Configuration:');
-console.log(`   API URL: ${API_CONFIG.url}`);
-console.log(`   Method: ${API_CONFIG.method}`);
-console.log(`   To: ${emailData.to}`);
+console.log(`   API: SendGrid (https://api.sendgrid.com/v3/mail/send)`);
+console.log(`   To: ${emailData.personalizations[0].to[0].email}`);
 console.log(`   Subject: ${emailData.subject}\n`);
 
-// Determine if URL is HTTP or HTTPS
-const url = new URL(API_CONFIG.url);
-const isHttps = url.protocol === 'https:';
-const client = isHttps ? https : http;
-
-// Prepare request options
+// Prepare request options for SendGrid
 const options = {
-  hostname: url.hostname,
-  port: url.port || (isHttps ? 443 : 80),
-  path: url.pathname + url.search,
-  method: API_CONFIG.method,
-  headers: API_CONFIG.headers
+  hostname: 'api.sendgrid.com',
+  port: 443,
+  path: '/v3/mail/send',
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${API_KEY}`,
+    'Content-Type': 'application/json'
+  }
 };
 
 // Prepare request body
 const requestBody = JSON.stringify(emailData);
 options.headers['Content-Length'] = Buffer.byteLength(requestBody);
 
-console.log('📤 Sending request...\n');
+console.log('📤 Sending request to SendGrid...\n');
 
 // Make the request
-const req = client.request(options, (res) => {
+const req = https.request(options, (res) => {
   let responseData = '';
 
   res.on('data', (chunk) => {
@@ -77,12 +100,17 @@ const req = client.request(options, (res) => {
     console.log(`📥 Response Body:`, responseData);
 
     if (res.statusCode >= 200 && res.statusCode < 300) {
-      console.log('\n✅ Email sent successfully via Office API!');
+      console.log('\n✅ Email sent successfully via SendGrid!');
       console.log('📬 Check your inbox: mohd.kashif@singleinterface.com');
     } else {
       console.error('\n❌ Failed to send email');
       console.error(`   Status: ${res.statusCode}`);
       console.error(`   Response: ${responseData}`);
+      if (res.statusCode === 401) {
+        console.error('\n💡 Authentication failed. Check:');
+        console.error('   1. SendGrid API key is correct');
+        console.error('   2. API key has "Mail Send" permissions');
+      }
       process.exit(1);
     }
   });
@@ -91,10 +119,9 @@ const req = client.request(options, (res) => {
 req.on('error', (error) => {
   console.error('❌ Request Error:', error.message);
   console.error('\n💡 Check:');
-  console.error('   1. API URL is correct');
-  console.error('   2. API key is valid');
-  console.error('   3. Network connectivity');
-  console.error('   4. API endpoint is accessible');
+  console.error('   1. SendGrid API key is correct');
+  console.error('   2. Network connectivity');
+  console.error('   3. SendGrid service status');
   process.exit(1);
 });
 
