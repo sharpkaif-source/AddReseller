@@ -2188,8 +2188,8 @@ async function submitReseller(page) {
         const rowText = await firstRow.textContent().catch(() => '');
         console.log(`   🔍 First row text: "${rowText.substring(0, 200)}..."`);
         
-        // Check if reseller name is in the first row (should be in NAME column)
-        if (rowText && (rowText.includes(resellerName) || rowText.toLowerCase().includes(resellerName.toLowerCase()))) {
+        // Strict matching - must contain the exact reseller name
+        if (rowText && rowText.includes(resellerName)) {
           console.log(`   ✓ Found reseller name "${resellerName}" in FIRST row!`);
           resellerFound = true;
           break;
