@@ -131,61 +131,121 @@ jobs:
         env:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           
-      - name: Send Success Email
+      - name: Send Success Email via Office API
         if: success()
         continue-on-error: true
-        env:
-          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: smtp.gmail.com
-          server_port: 587
-          username: mohd.kashif@singleinterface.com
-          password: ${{ env.SMTP_PASSWORD }}
-          subject: '✅ Reseller Bot: Success - Reseller Created'
-          to: mohd.kashif@singleinterface.com
-          from: mohd.kashif@singleinterface.com
-          html_body: |
-            <h2>✅ Reseller Creation Bot - Success</h2>
-            <p><strong>Status:</strong> Reseller created successfully!</p>
-            <p><strong>Workflow Run:</strong> <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">View Run #${{ github.run_number }}</a></p>
-            <p><strong>Repository:</strong> ${{ github.repository }}</p>
-            <p><strong>Branch:</strong> ${{ github.ref_name }}</p>
-            <p><strong>Triggered by:</strong> ${{ github.event_name }}</p>
-            <p><strong>Execution Time:</strong> ~52-53 seconds</p>
-            <p><strong>Commit:</strong> ${{ github.sha }}</p>
-            <hr>
-            <p><small>This is an automated notification from GitHub Actions.</small></p>
+        run: |
+          echo "📧 Sending success email via Office API..."
+          
+          API_URL="${{ secrets.OFFICE_API_URL }}"
+          API_KEY="${{ secrets.OFFICE_API_KEY }}"
+          
+          if [ -z "$API_URL" ]; then
+            echo "❌ ERROR: OFFICE_API_URL secret is not set!"
+            exit 1
+          fi
+          
+          # Prepare email content
+          SUBJECT="✅ Reseller Bot: Success - Reseller Created"
+          BODY="<h2>✅ Reseller Creation Bot - Success</h2>
+          <p><strong>Status:</strong> Reseller created successfully!</p>
+          <p><strong>Workflow Run:</strong> <a href=\"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\">View Run #${{ github.run_number }}</a></p>
+          <p><strong>Repository:</strong> ${{ github.repository }}</p>
+          <p><strong>Branch:</strong> ${{ github.ref_name }}</p>
+          <p><strong>Triggered by:</strong> ${{ github.event_name }}</p>
+          <p><strong>Execution Time:</strong> ~52-53 seconds</p>
+          <p><strong>Commit:</strong> ${{ github.sha }}</p>
+          <hr>
+          <p><small>This is an automated notification from GitHub Actions.</small></p>"
+          
+          TO="mohd.kashif@singleinterface.com"
+          
+          # Create JSON payload (adjust format based on your Office API requirements)
+          JSON_PAYLOAD=$(jq -n \
+            --arg to "$TO" \
+            --arg subject "$SUBJECT" \
+            --arg body "$BODY" \
+            '{to: $to, subject: $subject, body: $body}')
+          
+          # Send HTTP request (adjust headers based on your API)
+          echo "🌐 Calling Office API: $API_URL"
+          
+          HTTP_CODE=$(curl -X POST "$API_URL" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $API_KEY" \
+            -d "$JSON_PAYLOAD" \
+            -w "%{http_code}" \
+            -o /tmp/api-response.txt \
+            -s)
+          
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "✅ Email sent successfully! (HTTP $HTTP_CODE)"
+            cat /tmp/api-response.txt
+          else
+            echo "❌ Failed to send email (HTTP $HTTP_CODE)"
+            cat /tmp/api-response.txt
+            exit 1
+          fi
 
-      - name: Send Failure Email
+      - name: Send Failure Email via Office API
         if: failure()
         continue-on-error: true
-        env:
-          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: smtp.gmail.com
-          server_port: 587
-          username: mohd.kashif@singleinterface.com
-          password: ${{ env.SMTP_PASSWORD }}
-          subject: '❌ Reseller Bot: Failed - Reseller Creation Error'
-          to: mohd.kashif@singleinterface.com
-          from: mohd.kashif@singleinterface.com
-          html_body: |
-            <h2>❌ Reseller Creation Bot - Failed</h2>
-            <p><strong>Status:</strong> Reseller creation failed!</p>
-            <p><strong>Workflow Run:</strong> <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">View Run #${{ github.run_number }}</a></p>
-            <p><strong>Repository:</strong> ${{ github.repository }}</p>
-            <p><strong>Branch:</strong> ${{ github.ref_name }}</p>
-            <p><strong>Triggered by:</strong> ${{ github.event_name }}</p>
-            <p><strong>Commit:</strong> ${{ github.sha }}</p>
-            <hr>
-            <p><strong>Next Steps:</strong></p>
-            <ul>
-              <li>Check the workflow logs for error details</li>
-              <li>Download error screenshots from artifacts (if available)</li>
-              <li>Verify the application is accessible</li>
-              <li>Check credentials and configuration</li>
-            </ul>
-            <hr>
-            <p><small>This is an automated notification from GitHub Actions.</small></p>
+        run: |
+          echo "📧 Sending failure email via Office API..."
+          
+          API_URL="${{ secrets.OFFICE_API_URL }}"
+          API_KEY="${{ secrets.OFFICE_API_KEY }}"
+          
+          if [ -z "$API_URL" ]; then
+            echo "❌ ERROR: OFFICE_API_URL secret is not set!"
+            exit 1
+          fi
+          
+          # Prepare email content
+          SUBJECT="❌ Reseller Bot: Failed - Reseller Creation Error"
+          BODY="<h2>❌ Reseller Creation Bot - Failed</h2>
+          <p><strong>Status:</strong> Reseller creation failed!</p>
+          <p><strong>Workflow Run:</strong> <a href=\"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\">View Run #${{ github.run_number }}</a></p>
+          <p><strong>Repository:</strong> ${{ github.repository }}</p>
+          <p><strong>Branch:</strong> ${{ github.ref_name }}</p>
+          <p><strong>Triggered by:</strong> ${{ github.event_name }}</p>
+          <p><strong>Commit:</strong> ${{ github.sha }}</p>
+          <hr>
+          <p><strong>Next Steps:</strong></p>
+          <ul>
+            <li>Check the workflow logs for error details</li>
+            <li>Download error screenshots from artifacts (if available)</li>
+            <li>Verify the application is accessible</li>
+            <li>Check credentials and configuration</li>
+          </ul>
+          <hr>
+          <p><small>This is an automated notification from GitHub Actions.</small></p>"
+          
+          TO="mohd.kashif@singleinterface.com"
+          
+          # Create JSON payload (adjust format based on your Office API requirements)
+          JSON_PAYLOAD=$(jq -n \
+            --arg to "$TO" \
+            --arg subject "$SUBJECT" \
+            --arg body "$BODY" \
+            '{to: $to, subject: $subject, body: $body}')
+          
+          # Send HTTP request (adjust headers based on your API)
+          echo "🌐 Calling Office API: $API_URL"
+          
+          HTTP_CODE=$(curl -X POST "$API_URL" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $API_KEY" \
+            -d "$JSON_PAYLOAD" \
+            -w "%{http_code}" \
+            -o /tmp/api-response.txt \
+            -s)
+          
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "✅ Email sent successfully! (HTTP $HTTP_CODE)"
+            cat /tmp/api-response.txt
+          else
+            echo "❌ Failed to send email (HTTP $HTTP_CODE)"
+            cat /tmp/api-response.txt
+            exit 1
+          fi

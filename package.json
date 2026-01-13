@@ -9,14 +9,22 @@
     "install-browsers": "playwright install chromium",
     "postinstall": "playwright install chromium || true"
   },
-  "keywords": ["playwright", "automation", "testing", "reseller"],
+  "keywords": [
+    "playwright",
+    "automation",
+    "testing",
+    "reseller"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "dotenv": "^16.3.1",
+    "nodemailer": "^7.0.12",
     "playwright": "^1.40.0",
-    "dotenv": "^16.3.1"
+    "tweetnacl-util": "^0.15.1"
   },
   "devDependencies": {
-    "@playwright/test": "^1.40.0"
+    "@playwright/test": "^1.40.0",
+    "tweetnacl": "^1.0.3"
   }
 }

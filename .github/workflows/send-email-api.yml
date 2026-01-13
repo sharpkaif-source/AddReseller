@@ -1,0 +1,80 @@
+# Reusable workflow for sending emails via Office API
+# This can be called from other workflows
+
+name: Send Email via Office API
+
+on:
+  workflow_call:
+    inputs:
+      subject:
+        required: true
+        type: string
+      body:
+        required: true
+        type: string
+      to:
+        required: true
+        type: string
+      status:
+        required: false
+        type: string
+        default: 'info'
+
+jobs:
+  send-email:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Email via Office API
+        continue-on-error: true
+        run: |
+          echo "📧 Sending email via Office API..."
+          
+          # Office API Configuration
+          API_URL="${{ secrets.OFFICE_API_URL }}"
+          API_KEY="${{ secrets.OFFICE_API_KEY }}"
+          
+          if [ -z "$API_URL" ]; then
+            echo "❌ ERROR: OFFICE_API_URL secret is not set!"
+            exit 1
+          fi
+          
+          # Prepare email data
+          SUBJECT="${{ inputs.subject }}"
+          BODY="${{ inputs.body }}"
+          TO="${{ inputs.to }}"
+          STATUS="${{ inputs.status }}"
+          
+          # Create JSON payload (adjust format based on your API requirements)
+          JSON_PAYLOAD=$(cat <<EOF
+          {
+            "to": "$TO",
+            "subject": "$SUBJECT",
+            "body": "$BODY",
+            "status": "$STATUS"
+          }
+          EOF
+          )
+          
+          # Send HTTP request (adjust method and headers based on your API)
+          echo "🌐 Calling Office API: $API_URL"
+          
+          RESPONSE=$(curl -X POST "$API_URL" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $API_KEY" \
+            -H "X-API-Key: $API_KEY" \
+            -d "$JSON_PAYLOAD" \
+            -w "\n%{http_code}" \
+            -s)
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+          
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "✅ Email sent successfully!"
+            echo "   Response: $BODY"
+          else
+            echo "❌ Failed to send email"
+            echo "   HTTP Code: $HTTP_CODE"
+            echo "   Response: $BODY"
+            exit 1
+          fi
