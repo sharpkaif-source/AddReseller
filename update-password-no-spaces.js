@@ -7,7 +7,11 @@ const crypto = require('crypto');
 const nacl = require('tweetnacl');
 const util = require('tweetnacl-util');
 
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN || "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";
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+if (!GITHUB_TOKEN) {
+  console.error('❌ Error: GITHUB_TOKEN environment variable is required');
+  process.exit(1);
+}
 const GITHUB_USERNAME = 'sharpkaif-source';
 const REPO_NAME = 'AddReseller';
 
