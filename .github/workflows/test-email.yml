@@ -9,7 +9,29 @@ jobs:
     timeout-minutes: 5
     
     steps:
-      - name: Test Email Sending
+      - name: Debug Password Format
+        run: |
+          echo "🔍 Checking password secret..."
+          if [ -z "${{ secrets.SMTP_PASSWORD }}" ]; then
+            echo "❌ Secret is empty!"
+          else
+            echo "✅ Secret exists (masked in logs)"
+            # Check length (secrets are masked, but we can check if it exists)
+            echo "   Secret is set (length hidden for security)"
+          fi
+          echo ""
+          echo "📧 Email Configuration:"
+          echo "   Username: mohd.kashif@singleinterface.com"
+          echo "   Server: smtp.gmail.com:587"
+          echo "   Note: Gmail may block automated connections from CI/CD IPs"
+          echo ""
+          echo "💡 If authentication fails, check:"
+          echo "   1. Gmail App Password is correct"
+          echo "   2. 2-Step Verification is enabled"
+          echo "   3. No security alerts in Gmail account"
+          echo "   4. Try generating a new App Password"
+          
+      - name: Test Email Sending (Port 587 - TLS)
         continue-on-error: true
         uses: dawidd6/action-send-mail@v3
         with:
@@ -17,7 +39,7 @@ jobs:
           server_port: 587
           username: mohd.kashif@singleinterface.com
           password: ${{ secrets.SMTP_PASSWORD }}
-          subject: '🧪 Test Email from GitHub Actions'
+          subject: '🧪 Test Email from GitHub Actions (Port 587)'
           to: mohd.kashif@singleinterface.com
           from: mohd.kashif@singleinterface.com
           html_body: |
@@ -25,6 +47,29 @@ jobs:
             <p>This is a test email to verify SMTP configuration is working.</p>
             <p><strong>Time:</strong> ${{ github.run_id }}</p>
             <p><strong>Workflow:</strong> Test Email Only</p>
+            <p><strong>Port:</strong> 587 (TLS)</p>
+            <p>If you received this email, the email notifications are working correctly!</p>
+            <hr>
+            <p><small>This is a test from GitHub Actions.</small></p>
+            
+      - name: Test Email Sending (Port 465 - SSL)
+        continue-on-error: true
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: mohd.kashif@singleinterface.com
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: '🧪 Test Email from GitHub Actions (Port 465)'
+          to: mohd.kashif@singleinterface.com
+          from: mohd.kashif@singleinterface.com
+          html_body: |
+            <h2>✅ Email Test Successful!</h2>
+            <p>This is a test email to verify SMTP configuration is working.</p>
+            <p><strong>Time:</strong> ${{ github.run_id }}</p>
+            <p><strong>Workflow:</strong> Test Email Only</p>
+            <p><strong>Port:</strong> 465 (SSL)</p>
             <p>If you received this email, the email notifications are working correctly!</p>
             <hr>
             <p><small>This is a test from GitHub Actions.</small></p>
