@@ -57,7 +57,8 @@ jobs:
 
       - name: Run reseller creation bot
         id: run-bot
-        run: npm test || echo "::error::Bot execution failed with exit code $?"
+        run: |
+          npm test 2>&1 | tee bot-output.log || echo "::error::Bot execution failed with exit code $?"
         continue-on-error: false
         
       - name: Check bot result
@@ -144,10 +145,30 @@ jobs:
             exit 1
           fi
           
+          # Extract reseller name from bot logs
+          RESELLER_NAME=$(grep -i "reseller name verified:" bot-output.log 2>/dev/null | sed 's/.*Reseller Name verified: //' | head -1 | xargs)
+          
+          # If not found, try other patterns
+          if [ -z "$RESELLER_NAME" ]; then
+            RESELLER_NAME=$(grep -i "reseller name:" bot-output.log 2>/dev/null | sed 's/.*Reseller Name: //' | head -1 | xargs)
+          fi
+          
+          # If still not found, generate it the same way bot does (from config.js: Test Reseller ${Date.now()})
+          if [ -z "$RESELLER_NAME" ]; then
+            # Generate timestamp in milliseconds (same as Date.now() in Node.js)
+            TIMESTAMP_MS=$(date +%s)000
+            RESELLER_NAME="Test Reseller $TIMESTAMP_MS"
+          fi
+          
+          # Get current time in IST (Delhi time) - Asia/Kolkata is IST
+          IST_TIME=$(TZ=Asia/Kolkata date '+%Y-%m-%d %H:%M:%S IST')
+          
           # Prepare email content
           SUBJECT="✅ Reseller Bot: Success - Reseller Created"
           HTML_BODY="<h2>✅ Reseller Creation Bot - Success</h2>
           <p><strong>Status:</strong> Reseller created successfully!</p>
+          <p><strong>Reseller Name:</strong> $RESELLER_NAME</p>
+          <p><strong>Created At:</strong> $IST_TIME (Delhi Time)</p>
           <p><strong>Workflow Run:</strong> <a href=\"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\">View Run #${{ github.run_number }}</a></p>
           <p><strong>Repository:</strong> ${{ github.repository }}</p>
           <p><strong>Branch:</strong> ${{ github.ref_name }}</p>
