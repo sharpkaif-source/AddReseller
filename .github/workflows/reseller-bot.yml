@@ -87,6 +87,15 @@ jobs:
             login-page.png
           retention-days: 7
           if-no-files-found: ignore
+          
+      - name: Upload browser videos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-videos
+          path: videos/
+          retention-days: 7
+          if-no-files-found: ignore
 
       - name: Summary
         if: always()
