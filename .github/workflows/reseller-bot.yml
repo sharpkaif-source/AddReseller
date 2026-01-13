@@ -8,6 +8,11 @@ on:
         description: 'Custom reseller name (optional)'
         required: false
         type: string
+      headless_mode:
+        description: 'Run in headless mode? (false = visible, for debugging)'
+        required: false
+        type: boolean
+        default: true
   # Manual trigger enabled - Run workflow button should appear
   # Trigger via repository_dispatch (for API/webhook)
   repository_dispatch:
@@ -43,6 +48,7 @@ jobs:
           echo "BASE_URL=${{ secrets.BASE_URL || 'https://test-reseller.singleinterface.com/admin' }}" >> $GITHUB_ENV
           echo "ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL || 'admin@reseller.com' }}" >> $GITHUB_ENV
           echo "ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD || 'Admin@2025' }}" >> $GITHUB_ENV
+          echo "HEADLESS=${{ inputs.headless_mode }}" >> $GITHUB_ENV
         shell: bash
 
       - name: Copy logo file (if exists)

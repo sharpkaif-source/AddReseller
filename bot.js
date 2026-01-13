@@ -107,7 +107,12 @@ async function createReseller() {
     const browserContext = await browser.newContext({
       viewport: { width: 2560, height: 1440 },  // Larger viewport to see more content
       deviceScaleFactor: 1,  // 100% zoom - no scaling
-      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      // Record video to see browser activity (especially useful in CI)
+      recordVideo: {
+        dir: './videos/',
+        size: { width: 1920, height: 1080 }
+      }
     });
     
     page = await browserContext.newPage();
