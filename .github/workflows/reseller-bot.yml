@@ -247,10 +247,24 @@ jobs:
             exit 1
           fi
           
+          # Try to extract reseller name from bot logs (if available)
+          RESELLER_NAME=$(grep -i "reseller name verified:" bot-output.log 2>/dev/null | sed 's/.*Reseller Name verified: //' | head -1 | xargs)
+          if [ -z "$RESELLER_NAME" ]; then
+            RESELLER_NAME=$(grep -i "reseller name:" bot-output.log 2>/dev/null | sed 's/.*Reseller Name: //' | head -1 | xargs)
+          fi
+          if [ -z "$RESELLER_NAME" ]; then
+            RESELLER_NAME="Unknown (bot failed before reseller name was set)"
+          fi
+          
+          # Get current time in IST (Delhi time)
+          IST_TIME=$(TZ=Asia/Kolkata date '+%Y-%m-%d %H:%M:%S IST')
+          
           # Prepare email content
           SUBJECT="❌ Reseller Bot: Failed - Reseller Creation Error"
           HTML_BODY="<h2>❌ Reseller Creation Bot - Failed</h2>
           <p><strong>Status:</strong> Reseller creation failed!</p>
+          <p><strong>Reseller Name:</strong> $RESELLER_NAME</p>
+          <p><strong>Failed At:</strong> $IST_TIME (Delhi Time)</p>
           <p><strong>Workflow Run:</strong> <a href=\"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\">View Run #${{ github.run_number }}</a></p>
           <p><strong>Repository:</strong> ${{ github.repository }}</p>
           <p><strong>Branch:</strong> ${{ github.ref_name }}</p>
